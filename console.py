@@ -1,6 +1,10 @@
 #!/usr/bin/python3
-"""AirBnB Console"""
+"""
+Entry point for the AirBnB console.
+This module contains the HBNBCommand class.
+"""
 import cmd
+import sys
 from models import storage
 from models.base_model import BaseModel
 from models.user import User
@@ -10,7 +14,7 @@ from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
 
-
+# Dictionary of available classes
 classes = {
     "BaseModel": BaseModel,
     "User": User,
@@ -23,21 +27,30 @@ classes = {
 
 
 class HBNBCommand(cmd.Cmd):
+    """
+    HBNBCommand class for the AirBnB console.
+    """
     prompt = "(hbnb) "
 
     def do_quit(self, arg):
-        """Quit command"""
+        """Quit command to exit the program
+        """
         return True
 
     def do_EOF(self, arg):
-        """Exit on EOF"""
+        """EOF command to exit the program (Ctrl+D)
+        """
         print()
         return True
 
     def emptyline(self):
+        """Does nothing when an empty line is entered.
+        """
         pass
 
     def do_create(self, arg):
+        """Creates a new instance of a class, saves it, and prints the id.
+        """
         args = arg.split()
         if not args:
             print("** class name missing **")
@@ -49,6 +62,8 @@ class HBNBCommand(cmd.Cmd):
             print(obj.id)
 
     def do_show(self, arg):
+        """Prints the string representation of an instance.
+        """
         args = arg.split()
         if not args:
             print("** class name missing **")
@@ -58,13 +73,14 @@ class HBNBCommand(cmd.Cmd):
             print("** instance id missing **")
         else:
             key = "{}.{}".format(args[0], args[1])
-            objs = storage.all()
-            if key not in objs:
+            if key not in storage.all():
                 print("** no instance found **")
             else:
-                print(objs[key])
+                print(storage.all()[key])
 
     def do_destroy(self, arg):
+        """Deletes an instance based on the class name and id.
+        """
         args = arg.split()
         if not args:
             print("** class name missing **")
@@ -74,46 +90,55 @@ class HBNBCommand(cmd.Cmd):
             print("** instance id missing **")
         else:
             key = "{}.{}".format(args[0], args[1])
-            objs = storage.all()
-            if key not in objs:
+            if key not in storage.all():
                 print("** no instance found **")
             else:
-                del objs[key]
+                del storage.all()[key]
                 storage.save()
 
     def do_all(self, arg):
+        """Prints all string representation of all instances.
+        """
         args = arg.split()
         objs = storage.all()
         if args and args[0] not in classes:
             print("** class doesn't exist **")
             return
-        result = []
-        for obj in objs.values():
-            if not args or obj.__class__.__name__ == args[0]:
-                result.append(str(obj))
-        print(result)
+        
+        obj_list = []
+        for key in objs:
+            if not args or objs[key].__class__.__name__ == args[0]:
+                obj_list.append(str(objs[key]))
+        print(obj_list)
 
     def do_update(self, arg):
+        """Updates an instance based on class name and id.
+        """
         args = arg.split()
         if not args:
             print("** class name missing **")
-        elif args[0] not in classes:
+            return
+        if args[0] not in classes:
             print("** class doesn't exist **")
-        elif len(args) < 2:
+            return
+        if len(args) < 2:
             print("** instance id missing **")
-        elif len(args) < 3:
+            return
+        
+        key = "{}.{}".format(args[0], args[1])
+        if key not in storage.all():
+            print("** no instance found **")
+            return
+        if len(args) < 3:
             print("** attribute name missing **")
-        elif len(args) < 4:
+            return
+        if len(args) < 4:
             print("** value missing **")
-        else:
-            key = "{}.{}".format(args[0], args[1])
-            objs = storage.all()
-            if key not in objs:
-                print("** no instance found **")
-                return
-            value = args[3].strip('"')
-            setattr(objs[key], args[2], value)
-            objs[key].save()
+            return
+        
+        # Logic to set attribute
+        setattr(storage.all()[key], args[2], args[3].strip('"'))
+        storage.all()[key].save()
 
 
 if __name__ == "__main__":
